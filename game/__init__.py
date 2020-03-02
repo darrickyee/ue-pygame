@@ -11,5 +11,5 @@ DB = loadDB(DB_PATH)
 ue_pylink.broadcast('Init', 'Go')  # pylint: disable=no-member
 
 
-def getTargetInfo(targetid: str):
-    return json.dumps(DB['npcs'].get(targetid, {}))
+def getGameEntity(entityid: str):
+    return json.dumps(DB['npcs'].get(entityid, {}))
