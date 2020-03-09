@@ -1,5 +1,3 @@
-# %%
-from functools import reduce
 from typing import List, Dict, Any
 from abc import ABC, abstractmethod
 
@@ -14,6 +12,9 @@ class AbstractNode(ABC):
     def next(self, index=0):
         pass
 
+    def as_dict(self):
+        return {'nodeid': self.nodeid, 'edges': self.edges}
+
 
 class DlgText(AbstractNode):
 
@@ -24,11 +25,11 @@ class DlgText(AbstractNode):
     def next(self, index=0):
         return self.edges[0].get('node', None) if self.edges else None
 
+    def as_dict(self):
+        return {**super().as_dict(), 'text': self.text}
+
 
 class DlgResponse(AbstractNode):
-
-    def __init__(self, nodeid, edges=None):
-        super().__init__(nodeid, edges)
 
     @property
     def validEdges(self) -> List[Dict[str, Any]]:
@@ -43,9 +44,6 @@ class DlgResponse(AbstractNode):
 
 
 class DlgBranch(AbstractNode):
-
-    def __init__(self, nodeid, edges=None):
-        super().__init__(nodeid, edges)
 
     def next(self, index=0):
         for edge in self.edges:
@@ -85,54 +83,3 @@ def playDlg(graph):
             nextidx = displayDlg(text, responses)
 
         currnode = graph.get(currnode.next(nextidx), None)
-
-# %%
-
-
-dt0 = DlgText('dt0', text='Hi!', edges=[{'node': 'dt1'}])
-dt1 = DlgText('dt1', edges=[{'node': 'dr1'}], text='H ow are you!')
-dr1 = DlgResponse('dr1', [{'node': 'dt2', 'text': 'Fyne'}, {
-                  'node': 'dt3', 'text': 'Bad'}, {
-    'node': 'dt3', 'text': 'Ok', 'condition': True}])
-dt2 = DlgText('dt2', text='Gewd!', edges=[{'node': 'db1'}])
-dt3 = DlgText('dt3', [{'node': 'dt0'}], text='Try again!')
-
-db1 = DlgBranch('db1', edges=[{'node': 'dt0', 'condition': True}, {
-                'node': 'dt1', 'condition': False}])
-
-dg = {n.nodeid: n for n in (dt0, dt1, dr1, dt2, dt3, db1)
-      }
-dg['0'] = dt0
-
-# %%
-
-
-class System():
-
-    def __init__(self, handlers: List = None):
-        self.handlers = handlers or []
-
-    def _gethandler(self, handler):
-        if hasattr(handler, 'process'):
-            return handler.process
-
-        return handler
-
-    def process(self, event, context=None):
-        context = context or self
-        return reduce(lambda event, handler: self._gethandler(handler)(event, context), self.handlers, event)
-
-
-def hndlr1(event, context):
-    print(event)
-    print(context)
-    return event
-
-
-def hndlr2(event, context):
-
-    event['text'] = 'Processed ' + event['text']
-    return event
-
-
-subsys = System([hndlr2, hndlr1])
