@@ -8,7 +8,7 @@ DB_PATH = os.path.abspath(os.path.dirname(
 
 DB = loadDB(DB_PATH)
 
-ue_pylink.broadcast('Init', 'Go')  # pylint: disable=no-member
+# ue_pylink.broadcast('Init', 'Go')  # pylint: disable=no-member
 
 
 def getGameEntity(entityid: str):

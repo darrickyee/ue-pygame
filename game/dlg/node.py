@@ -1,66 +1,70 @@
-from typing import List, Dict, Any
-from abc import ABC, abstractmethod
-#from ..utils import omit
+from typing import List
 
 
-class Edge():
+class Edge(dict):
 
-    def __init__(self, from_id: str, to_id: str, text: str = '', condition=None):
-        self.from_id = from_id
-        self.to_id = to_id
-        self.text = text
-        self.condition = condition or True
+    def __init__(self, from_id: str, to_id: str, text: str = '', condition=True):
+        super().__init__(from_id=from_id, to_id=to_id, text=text, condition=condition)
 
 
-class AbstractNode(ABC):
+class Node(dict):
 
-    def __init__(self, node_id: str, edges: List[Dict[str, Any]] = None, **kwargs):
-        self.node_id = node_id
-        self.edges = edges or []
+    defaults = {}
 
-    @abstractmethod
-    def next(self, index=0):
-        pass
+    def __init__(self, node_id: str, edges: List[Edge] = None, **kwargs):
+        super().__init__(node_id=node_id, edges=edges or [])
+        self.update({k: kwargs.get(k, None) or v
+                     for k, v in self.__class__.defaults.items()})
 
-    def as_dict(self):
-        return {'node_id': self.node_id, 'edges': self.edges}
+    def __getattr__(self, name):
+        if name in self:
+            return self[name]
+
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+    def __setattr__(self, name, value):
+        if name in self:
+            self[name] = value
+            return
+
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+    def next(self, index=0) -> str:
+        if self.edges:
+            index = min(max(0, index), len(self.edges)-1)
+            return self.edges[index].get('to_id', None)
+
+        return None
 
     def __repr__(self):
-        return f'{self.__class__.__name__} < {str(self.as_dict())} >'
+        return f'{self.__class__.__name__} { {k: v for k, v in self.items()} }'
 
 
-class DlgText(AbstractNode):
+class DlgLine(Node):
 
-    def __init__(self, node_id, edges=None, text='', **kwargs):
-        super().__init__(node_id, edges)
-        self.text = text
+    defaults = {'text': '', 'speaker': ''}
 
-    def next(self, index=0):
-        return self.edges[0].get('to_id', None) if self.edges else None
-
-    def as_dict(self):
-        return {**super().as_dict(), 'text': self.text}
+    def next(self, index=0) -> str:
+        return super().next(0)
 
 
-class DlgResponse(AbstractNode):
+class _DlgCond(Node):
 
     @property
-    def validEdges(self) -> List[Dict[str, Any]]:
-        return [edge for edge in self.edges if edge.get('condition', True)]
+    def edges(self) -> List[Edge]:
+        return tuple(edge for edge in self['edges'] if edge.get('condition', True))
+
+
+class DlgBranch(_DlgCond):
+
+    def next(self, index=0) -> str:
+        return super().next(0)
+
+
+class DlgResponse(_DlgCond):
 
     @property
     def responses(self) -> List[str]:
-        return [edge.get('text', None) for edge in self.validEdges]
-
-    def next(self, index=0):
-        return self.validEdges[index].get('to_id', None) if self.validEdges and index < len(self.validEdges) else None
-
-
-class DlgBranch(AbstractNode):
-
-    def next(self, index=0):
-        for edge in self.edges:
-            if edge.get('condition', False) or edge == self.edges[-1]:
-                return edge.get('to_id', None)
-
-        return None
+        return tuple(edge.get('text', '') for edge in self.edges)
