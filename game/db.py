@@ -7,15 +7,16 @@ CONVERTERS = {
 }
 
 
-def loadTable(conn, table_name):
+def _loadTable(conn, table_name):
+    rowlist = []
     with conn:
         rowlist = conn.cursor().execute(
             f'SELECT * FROM {table_name}').fetchall()
 
-    return {row['id']: {k: v for k, v in row.items() if k != 'id'} for row in rowlist}
+    return rowlist
 
 
-def getTables(conn):
+def _getTables(conn):
     with conn:
         rows = [dict(r) for r in conn.execute(
             'SELECT type, name FROM sqlite_master').fetchall()]
@@ -29,4 +30,4 @@ def loadDB(path):
     conn = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
     conn.row_factory = lambda cursor, row: dict(sqlite3.Row(cursor, row))
 
-    return {table: loadTable(conn, table) for table in getTables(conn)}
+    return {table: _loadTable(conn, table) for table in _getTables(conn)}
