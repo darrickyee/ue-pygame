@@ -1,4 +1,4 @@
-from .node import DlgGraph, importGraph
+from .graph import DlgGraph, importGraph
 from ..db import loadDB
 
 
