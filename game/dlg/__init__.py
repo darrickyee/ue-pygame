@@ -24,7 +24,7 @@ DISPATCH = DLGSYS.dispatch
 @handler('DLG_UPDATE')
 def readNode(event, context: DlgGraph):
     if isinstance(context, DlgGraph):
-        currnode = context.currnode
+        currnode = context.node
 
         if currnode:
             if hasattr(currnode, 'responses'):
@@ -57,10 +57,10 @@ def dummyGetResp(event, context: DlgGraph):
     getResponse(context)
 
 
-@handler('DLG_ONRESPONSE')
+@handler('DLG_SELECT')
 def dlgSelect(event, context: DlgGraph):
     context.currnode = context.getNode(
-        context.currnode.next(event['data']))
+        context.node.next(event['data']))
     DISPATCH({'event_type': 'DLG_UPDATE'}, context)
 
 
@@ -69,11 +69,7 @@ LOG = []
 
 @handler()
 def logEvent(event, context):
-    LOG.append(event)
-
-
-DLGSYS.handlers = (dlgSelect, dlgResponse, dlgText,
-                   dummyGetResp, readNode, logEvent)
+    print(event)
 
 
 DB_PATH = os.path.abspath(os.path.dirname(
@@ -119,17 +115,5 @@ def displayDlg(text, responses):
 
 def playDlg(graph: DlgGraph):
 
-    # currnode = graph.getNode(graph.root_id)
-    # nextidx = 0
-
-    # while currnode:
-    #     text = currnode.text if hasattr(currnode, 'text') else None
-    #     responses = currnode.responses if hasattr(
-    #         currnode, 'responses') else []
-
-    #     if text or responses:
-    #         nextidx = displayDlg(text, responses)
-
-    #     currnode = graph.getNode(currnode.next(nextidx))
     print('Playing...')
-    DISPATCH({'event_type': 'DLG_UPDATE'}, graph)
+    DISPATCH({'event_type': 'DLG_UPDATE', 'data': graph})

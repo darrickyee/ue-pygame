@@ -17,7 +17,7 @@ class DlgGraph:
     def __init__(self, root_id, nodelist: List[Node] = None):
         self.nodelist = nodelist
         self.root_id = root_id
-        self.currnode = self.getNode(root_id)
+        self.node = self.getNode(root_id)
 
     @property
     def nodes(self):
@@ -25,6 +25,12 @@ class DlgGraph:
 
     def getNode(self, node_id) -> Node:
         return self.nodes.get(node_id, None)
+
+    def next(self, index=0):
+        if self.node:
+            self.node = self.nodes.get(self.node.next(index), None)
+
+        return self.node
 
 
 def exportGraph(nodelist: List[Node]) -> Dict[str, List]:

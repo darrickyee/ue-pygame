@@ -52,4 +52,10 @@ class System():
                       event)
 
     def dispatch(self, event, context=None):
+        context = context or self
         self.events = [*self.events, {'event': event, 'context': context}]
+
+        if len(self.events) == 1:
+            while self.events:
+                self.process(**self.events[0])
+                self.events = self.events[1:]
