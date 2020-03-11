@@ -79,20 +79,21 @@ DB_PATH = os.path.abspath(os.path.dirname(
 tbls = loadDB(DB_PATH)
 
 
-def loadDlgGraphs(dlg_graphs, dlg_nodes, dlg_edges):
+def importDlgData(dlg_graphs, dlg_nodes, dlg_edges):
     graphs = {}
     for graph_row in dlg_graphs:
         gid = graph_row.get('graph_id', None)
         nodes_edges = [[row for row in rows if row['graph_id'] == gid]
                        for rows in (dlg_nodes, dlg_edges)]
-        graphs[gid] = DlgGraph(
-            graph_row['root_id'], importGraph(*nodes_edges))
+        graphs[gid] = {'root_id': graph_row['root_id'],
+                       'node_data': nodes_edges[0],
+                       'edge_data': nodes_edges[1]}
 
     return graphs
 
 
-dlgs = loadDlgGraphs(**tbls)
-
+dlg_datas = importDlgData(**tbls)
+dlg1 = DlgGraph(**dlg_datas['dlg1'])
 
 # %%
 

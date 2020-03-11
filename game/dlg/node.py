@@ -3,7 +3,7 @@ from typing import List
 
 class Edge(dict):
 
-    def __init__(self, from_id: str, to_id: str, text: str = '', condition=True):
+    def __init__(self, from_id: str, to_id: str, text: str = '', condition=True, **kwargs):
         super().__init__(from_id=from_id, to_id=to_id, text=text, condition=condition)
 
 
