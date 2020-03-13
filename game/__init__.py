@@ -2,7 +2,7 @@ import os
 import json
 import ue_pylink
 from .db import loadDB
-from .dlg import dlgs, playDlg, DISPATCH, DLGSYS, DlgGraph
+from .dlg import GRAPH, DlgGraph
 from .ecs import handler, System
 
 DB_PATH = os.path.abspath(os.path.dirname(
@@ -17,7 +17,9 @@ def getGameEntity(entityid: str):
     return json.dumps(DB['npcs'].get(entityid, {}))
 
 
-GRAPH = dlgs['dlg1']
+# %%
+
+DLGSYSTEM = System()
 
 
 def Select(index: str):
@@ -26,7 +28,8 @@ def Select(index: str):
     except ValueError:
         index = 1
 
-    DISPATCH({'event_type': 'DLG_SELECT', 'data': GRAPH, 'index': index-1})
+    DLGSYSTEM.dispatch({'event_type': 'DLG_SELECT',
+                        'data': GRAPH, 'index': index-1})
 
 
 @handler('DLG_SELECT')
@@ -48,17 +51,19 @@ def dlgUpdate(event, context: System):
         if hasattr(graph.node, 'responses'):
             ue_pylink.broadcast(
                 'DLG_RESPONSE', json.dumps(graph.node.responses))
+            print(graph.node.responses)
             return
 
         if hasattr(graph.node, 'text'):
             ue_pylink.broadcast('DLG_LINE', json.dumps(
                 {'speaker': graph.node.speaker, 'text': graph.node.text}))
+            print(graph.node.text)
             return
 
         context.dispatch({'event_type': 'DLG_SELECT', 'data': graph})
         return
 
 
-DLGSYS.handlers = (dlgSelect, dlgUpdate)
+DLGSYSTEM.handlers = (dlgSelect, dlgUpdate)
 
-playDlg(dlgs['dlg1'])
+DLGSYSTEM.dispatch({'event_type': 'DLG_UPDATE', 'data': GRAPH})

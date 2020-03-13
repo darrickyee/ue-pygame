@@ -1,6 +1,5 @@
 from typing import List, Dict
 from .node import Node, DlgLine, DlgResponse, DlgBranch, Edge
-from ..utils import omit
 
 
 NODE_CLASS = {
@@ -17,8 +16,8 @@ def buildNodes(node_data: List[Dict], edge_data: List[Dict]):
                          for data in node_data]
 
     for node in nodes:
-        node['edges'] = [
-            Edge(**{k: v for k, v in data.items() if v}) for data in edge_data if data['from_id'] == node['node_id']]
+        node.edges = [
+            Edge(**{k: v for k, v in data.items() if v}) for data in edge_data if data['from_id'] == node.node_id]
 
     return nodes
 
@@ -28,11 +27,15 @@ class DlgGraph:
     def __init__(self, root_id, node_data: List[Dict], edge_data: List[Dict]):
         self.nodelist = buildNodes(node_data, edge_data)
         self.root_id = root_id
-        self._node = None
+        try:
+            self._node = self.nodes[root_id]
+        except KeyError:
+            raise ValueError(
+                f"Graph initialization failed: No valid node found for root_id: '{root_id}'")
 
     @property
     def node(self):
-        return self._node or self.nodes.get(self.root_id, None)
+        return self._node
 
     @property
     def nodes(self):
@@ -50,26 +53,3 @@ class DlgGraph:
 
     def reset(self):
         self.jump(self.root_id)
-
-
-def exportGraph(nodelist: List[Node]) -> Dict[str, List]:
-    _nodes = [{'node_type': NODE_TYPE.get(type(
-        node), 'UNKNOWN'), **omit(['edges'], node)} for node in nodelist]
-
-    _edges = [{'from_id': node.node_id, **edge}
-              for node in nodelist for edge in node['edges']]
-
-    return {'nodes': _nodes, 'edges': _edges}
-
-
-def importGraph(nodes: List[Dict], edges: List[Dict]) -> List[Node]:
-
-    _nodes = [NODE_CLASS[node.get('node_type', 'line')](
-        **node) for node in nodes]
-
-    for node in _nodes:
-        node.edges = [{k: v for k, v in omit(['from_id', 'graph_id'], edge).items()
-                       if v is not None}
-                      for edge in edges if edge.get('from_id') == node.node_id]
-
-    return _nodes
