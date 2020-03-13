@@ -4,11 +4,11 @@ from ..ecs import System, handler, EVENT_NONE
 from ..db import loadDB
 
 
-DB_PATH = os.path.abspath(os.path.dirname(
-    os.path.realpath(__file__)) + '/dlg.db')
+def loadDlgTables(filepath='dlg.db'):
+    dbpath = os.path.abspath(os.path.dirname(
+        os.path.realpath(__file__)) + f'/{filepath}')
 
-
-tbls = loadDB(DB_PATH)
+    return loadDB(dbpath)
 
 
 def importDlgData(dlg_graphs, dlg_nodes, dlg_edges):
@@ -20,8 +20,10 @@ def importDlgData(dlg_graphs, dlg_nodes, dlg_edges):
         graphs[gid] = {'root_id': graph_row['root_id'],
                        'node_data': nodes_edges[0],
                        'edge_data': nodes_edges[1]}
-
     return graphs
 
 
-GRAPH = DlgGraph(**importDlgData(**tbls)['dlg1'])
+def getDlgGraph(graph_id, filepath='dlg.db'):
+    data = importDlgData(**loadDlgTables(filepath))
+
+    return DlgGraph(**data.get(graph_id, None)) if data else None

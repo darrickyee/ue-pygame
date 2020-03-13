@@ -1,8 +1,8 @@
 import os
 import json
-import ue_pylink
+# import ue_pylink
 from .db import loadDB
-from .dlg import GRAPH, DlgGraph
+from .dlg import getDlgGraph, DlgGraph
 from .ecs import handler, System
 
 DB_PATH = os.path.abspath(os.path.dirname(
@@ -19,7 +19,13 @@ def getGameEntity(entityid: str):
 
 # %%
 
+def SendEvent(name: str, data: str = None):
+    # ue_pylink.broadcast(name, data)
+    print(f'{name}: {data}')
+
+
 DLGSYSTEM = System()
+GRAPH = getDlgGraph('dlg1')
 
 
 def Select(index: str):
@@ -49,15 +55,15 @@ def dlgUpdate(event, context: System):
     graph: DlgGraph = event.get('data', None)
     if graph and graph.node:
         if hasattr(graph.node, 'responses'):
-            ue_pylink.broadcast(
+            SendEvent(
                 'DLG_RESPONSE', json.dumps(graph.node.responses))
-            print(graph.node.responses)
+
             return
 
         if hasattr(graph.node, 'text'):
-            ue_pylink.broadcast('DLG_LINE', json.dumps(
+            SendEvent('DLG_LINE', json.dumps(
                 {'speaker': graph.node.speaker, 'text': graph.node.text}))
-            print(graph.node.text)
+
             return
 
         context.dispatch({'event_type': 'DLG_SELECT', 'data': graph})
