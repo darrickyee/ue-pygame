@@ -2,6 +2,8 @@ from functools import reduce, wraps
 from typing import List, Tuple, Union
 from warnings import warn
 
+from .managers import EntityManager
+
 
 EVENT_NONE = {'event_type': None}
 
@@ -30,9 +32,10 @@ def handler(event_types: Union[List[str], Tuple[str], str] = None):
 
 class System():
 
-    def __init__(self, handlers: List = None):
+    def __init__(self, handlers: List = None, entitymgr=None):
         self.handlers = handlers or []
         self.events = []
+        self.entitymgr: EntityManager = entitymgr
 
     def _gethandler(self, obj):
         if hasattr(obj, 'process'):

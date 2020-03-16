@@ -17,7 +17,8 @@ def buildNodes(node_data: List[Dict], edge_data: List[Dict]):
 
     for node in nodes:
         node.edges = [
-            Edge(**{k: v for k, v in data.items() if v}) for data in edge_data if data['from_id'] == node.node_id]
+            Edge(**{k: v for k, v in data.items() if v})
+            for data in edge_data if data['from_id'] == node.node_id]
 
     return nodes
 

@@ -23,7 +23,5 @@ def importDlgData(dlg_graphs, dlg_nodes, dlg_edges):
     return graphs
 
 
-def getDlgGraph(graph_id, filepath='dlg.db'):
-    data = importDlgData(**loadDlgTables(filepath))
-
-    return DlgGraph(**data.get(graph_id, None)) if data else None
+def loadDlgGraphs(filepath='dlg.db'):
+    return importDlgData(**loadDlgTables(filepath))
