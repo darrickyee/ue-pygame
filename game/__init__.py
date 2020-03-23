@@ -40,6 +40,9 @@ for npc in (eid for eid in EM.entity_ids if eid != 'player'):
 GAMEDB = loadDlgGraphs()
 
 
+def getGameEntity(eid):
+    return json.dumps(EM.getEntity(eid).get('character', {}))
+
 # %%
 
 
