@@ -16,7 +16,7 @@ class DlgGraph(Graph):
         super().__init__()
         if edges:
             for edge in edges:
-                self.addEdge(*edge)
+                self.add_edge(*edge)
 
     @property
     def root(self):
