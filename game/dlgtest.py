@@ -2,12 +2,60 @@
 # Needed for interactive window relative import
 import sys
 from pathlib import Path
-
-sys.path[0] = str(Path(sys.path[0]).parent)  # nopep8
-from game.graph import Graph
 import jsonpatch as jp
 import rx.operators as ops
 from rx.subject import Subject
+
+sys.path[0] = str(Path(sys.path[0]).parent)  # nopep8
+from game.graph import Graph
+
+
+# %%
+
+def cond(conddata):
+    return True
+
+
+class Dialogue:
+
+    def __init__(self, graph: Graph):
+        self.graph = graph
+        self._node = None
+
+    @property
+    def node(self):
+        return self._node
+
+    def start(self):
+        startnode = [node for node, data in self.graph.nodes.items()
+                     if data == 'root'] or list(self.graph.nodes)
+
+        if startnode:
+            self._node = startnode[0]
+        else:
+            raise ValueError(
+                f"Dialogue.start() failed: Graph '{self.graph}' has no nodes.")
+
+    def children(self):
+        if self.graph[self.node]:
+            return [node for node, edgedata in self.graph[self.node].items() if self.validate(edgedata)]
+
+        return []
+
+    def validate(self, edgedata):
+        return edgedata is None or cond(edgedata)
+
+    def next(self, response=0):
+        children = self.children()
+
+        if children:
+            self._node = children[response] if len(
+                children) > response else children[0]
+            return self.node
+
+        return None
+
+        # %%
 
 
 class DlgGraph(Graph):

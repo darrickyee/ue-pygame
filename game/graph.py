@@ -4,10 +4,6 @@ from abc import abstractproperty
 from collections.abc import Hashable, Iterable, Mapping, MutableSequence, Sequence
 from functools import singledispatchmethod
 
-startdict = {'a': {'b': 2}, 2: {'c': 'd'}}
-
-# %%
-
 
 class BaseView(Mapping):
 
@@ -34,7 +30,7 @@ class BaseView(Mapping):
         return iter(self._d)
 
     def __getitem__(self, key):
-        return self._d[key]
+        return self._d.get(key, None)
 
     def __setitem__(self, key, value):
         if key in self._d:
@@ -50,7 +46,13 @@ class EdgeView(BaseView):
 
     @property
     def _data(self):
-        return self._graph._edgedata
+        return {(n1, n2): self._map[n1].get(n2, None) for n1, n2 in self._keys}
+
+    def __setitem__(self, key, value):
+        if key in self._d:
+            self._map[key[0]][key[1]] = value
+        else:
+            raise KeyError(key)
 
     @property
     def _keys(self):
@@ -60,7 +62,7 @@ class EdgeView(BaseView):
         if isinstance(obj, Hashable):
             return super().__contains__(obj)
 
-        if isinstance(obj, Iterable):
+        if isinstance(obj, Sequence):
             return super().__contains__(tuple(obj))
 
         return False
@@ -76,24 +78,15 @@ class NodeView(BaseView):
     def _keys(self):
         return (node for node in self._map)
 
-    def __add__(self, other):
-        self._graph.add_node(other)
-
-# %%
-
 
 class Graph:
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self._map: t.Dict[t.Any, t.Dict[t.Any, t.Any]] = {}
         self._nodedata: t.Dict[t.Any, t.Any] = {}
-        self._edgedata: t.Dict[t.Tuple, t.Any] = {}
-        self.data = kwargs
 
         self.nodes = NodeView(self)
         self.edges = EdgeView(self)
-
-        self.clear = self._map.clear
 
     def add_node(self, node, data=None):
         if node is not None:
@@ -101,17 +94,12 @@ class Graph:
                 self._map[node] = {}
 
             if data is not None:
-                self.nodes[node] = data
+                self._nodedata[node] = data
 
     @singledispatchmethod
     def add_nodes(self, nodes):
         raise TypeError(
             'add_nodes() requires either an Iterable or a Mapping.')
-
-    @add_nodes.register
-    def add_nodes_graph(self, graph: Graph):
-        for node, data in graph.nodes.items():
-            self.add_node(node, data)
 
     @add_nodes.register
     def add_nodes_mapping(self, nodemap: Mapping):
@@ -139,7 +127,7 @@ class Graph:
         self._map[node1].update({node2: None})
 
         if data is not None:
-            self.edges[node1, node2] = data
+            self._map[node1][node2] = data
 
     @singledispatchmethod
     def add_edges(self, edges):
@@ -150,7 +138,7 @@ class Graph:
     def add_edges_mapping(self, edgemap: Mapping):
         for edge, data in edgemap.items():
             if isinstance(edge, Iterable) and len(e := tuple(edge)) == 2:
-                self.add_edge(*edge[:2], data)
+                self.add_edge(*e[:2], data)
             else:
                 raise ValueError(
                     f"add_edges(Mapping): Edge must be an Iterable with two elements (received '{edge}').")
@@ -185,16 +173,13 @@ class Graph:
         self._nodedata = {node: data for node,
                           data in self._nodedata.items() if node in self.nodes}
 
-        self._edgedata = {edge: data for edge,
-                          data in self._edgedata.items() if edge in self.edges}
-
     # ---- Magic methods ---- #
 
     def __contains__(self, obj):
         return obj in self._map
 
     def __getitem__(self, key):
-        return {k: self.edges[key, k] for k in self._map[key]}
+        return self._map[key]
 
     def __delitem__(self, key):
         self.del_node(key)
@@ -208,19 +193,22 @@ class Graph:
     def __repr__(self):
         return f"{self.__class__.__name__} <nodes={len(self)}, edges={len(self.edges)}>"
 
-    def items(self):
-        return list((k, self[k]) for k in self._map)
+    # ---- Utilities ---- #
 
+    def clear(self):
+        self._map.clear()
+        self._nodedata.clear()
 
-# %%
-g = Graph()
-g.add_edge('a1', 'a2', data='My edge data')
-g.add_edge('n1', 'n2', data='More data')
-# %%
+    def copy(self):
+        g = Graph()
+        g.add_nodes(self.nodes)
+        g.add_edges(self.edges)
+        return g
 
+    def subgraphof(self, other):
+        return all(node in other
+                   for node in self.nodes) and all(edge in other.edges
+                                                   for edge in self.edges)
 
-class MyObj:
-    def __init__(self, value):
-        self.value = value
-
-# %%
+    def equalto(self, other):
+        return self.subgraphof(other) and other.subgraphof(self)
