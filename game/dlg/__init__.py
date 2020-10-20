@@ -1,12 +1,10 @@
-import os
-from .graph import DlgGraph
-from ..ecs import System, handler, EVENT_NONE
+from pathlib import Path
 from ..db import loadDB
+from .nodes import DlgBranch, DlgEnd, DlgGroup, DlgText, DlgNode
 
 
 def loadDlgTables(filepath='dlg.db'):
-    dbpath = os.path.abspath(os.path.dirname(
-        os.path.realpath(__file__)) + f'/{filepath}')
+    dbpath = Path(__file__).parent / filepath
 
     return loadDB(dbpath)
 

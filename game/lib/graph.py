@@ -3,6 +3,7 @@ import typing as t
 from abc import abstractproperty
 from collections.abc import Hashable, Iterable, Mapping, MutableSequence, Sequence
 from functools import singledispatchmethod
+from typing import Dict
 
 
 class BaseView(Mapping):
@@ -12,12 +13,12 @@ class BaseView(Mapping):
         self._map: t.Dict[t.Any, t.Dict[t.Any, t.Any]] = graph._map
 
     @abstractproperty
-    def _data(self):
-        pass
+    def _data(self) -> Dict:
+        return dict()
 
     @abstractproperty
-    def _keys(self):
-        pass
+    def _keys(self) -> Sequence:
+        return tuple()
 
     @property
     def _d(self):
@@ -39,7 +40,7 @@ class BaseView(Mapping):
             raise KeyError(key)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}<{self._d}>'
+        return f'{self.__class__.__name__}<{list(self._d)}>'
 
 
 class EdgeView(BaseView):
@@ -72,7 +73,7 @@ class NodeView(BaseView):
 
     @property
     def _data(self):
-        return self._graph._nodedata
+        return self._graph._nodedata  # pylint: disable=protected-access
 
     @property
     def _keys(self):
@@ -81,9 +82,15 @@ class NodeView(BaseView):
 
 class Graph:
 
-    def __init__(self):
+    def __init__(self, *, nodes=None, edges=None):
         self._map: t.Dict[t.Any, t.Dict[t.Any, t.Any]] = {}
         self._nodedata: t.Dict[t.Any, t.Any] = {}
+
+        if nodes:
+            self.add_nodes(nodes)
+
+        if edges:
+            self.add_edges(edges)
 
         self.nodes = NodeView(self)
         self.edges = EdgeView(self)
@@ -114,7 +121,7 @@ class Graph:
             else:
                 self.add_node(node)
 
-    def add_edge(self, node1, node2, data=None):
+    def add_edge(self, node1, node2=None, data=None):
         """[summary]
 
         Args:
@@ -122,6 +129,9 @@ class Graph:
             node2 ([type]): [description]
             data ([type], optional): [description]. Defaults to None.
         """
+        if node2 is None:
+            return self.add_node(node1, data)
+
         self.add_nodes((node1, node2))
 
         self._map[node1].update({node2: None})
@@ -146,9 +156,9 @@ class Graph:
     @add_edges.register
     def add_edges_sequence(self, edgeseq: Iterable):
         for edge in edgeseq:
-            if isinstance(edge, Iterable) and len(edge) > 1:
+            if isinstance(edge, Sequence) and len(edge) > 1:
                 self.add_edge(
-                    *edge[:2], data=None if len(edge) < 3 else edge[2])
+                    *edge[:2], None if len(edge) < 3 else edge[2])
             else:
                 raise ValueError(
                     f"add_edges(Iterable): Edge must be an Iterable with at least two elements (received '{edge}').")
@@ -173,7 +183,16 @@ class Graph:
         self._nodedata = {node: data for node,
                           data in self._nodedata.items() if node in self.nodes}
 
-    # ---- Magic methods ---- #
+    # ---- Magic/builtin methods ---- #
+
+    def get(self, key, default=None, /):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def keys(self):
+        return self._map.keys()
 
     def __contains__(self, obj):
         return obj in self._map
@@ -184,6 +203,17 @@ class Graph:
     def __delitem__(self, key):
         self.del_node(key)
 
+    @singledispatchmethod
+    def __setitem__(self, key, value):
+        self.add_node(key, value)
+
+    @__setitem__.register
+    def __setitem__tuple(self, key: tuple, value):
+        if len(key) >= 2:
+            self.add_edge(*key[:2], value)
+        else:
+            self.add_node(key, value)
+
     def __iter__(self):
         return iter(self._map)
 
@@ -191,7 +221,7 @@ class Graph:
         return len(self._map)
 
     def __repr__(self):
-        return f"{self.__class__.__name__} <nodes={len(self)}, edges={len(self.edges)}>"
+        return f"{self.__class__.__name__}(nodes={dict(self.nodes)}, edges={dict(self.edges)})"
 
     # ---- Utilities ---- #
 
@@ -200,10 +230,7 @@ class Graph:
         self._nodedata.clear()
 
     def copy(self):
-        g = Graph()
-        g.add_nodes(self.nodes)
-        g.add_edges(self.edges)
-        return g
+        return Graph(nodes=self.nodes, edges=self.edges)
 
     def subgraphof(self, other):
         return all(node in other
@@ -212,3 +239,8 @@ class Graph:
 
     def equalto(self, other):
         return self.subgraphof(other) and other.subgraphof(self)
+
+    def to_json(self):
+        return {'nodes': dict(self.nodes), 'edges': dict(self.edges)}
+
+# %%

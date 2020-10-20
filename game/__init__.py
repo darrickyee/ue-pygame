@@ -2,7 +2,7 @@ import os
 import json
 import ue_pylink
 from .db import loadDB
-from .dlg import loadDlgGraphs, DlgGraph
+from .dlg import loadDlgGraphs
 from .ecs import handler, System, EntityManager
 
 DB_PATH = os.path.abspath(os.path.dirname(
