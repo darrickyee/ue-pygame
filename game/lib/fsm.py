@@ -1,6 +1,5 @@
 
 # %%
-from sqlite3.dbapi2 import Error
 from typing import Any, Callable, Optional
 import rx.operators as ops
 from rx.subject.subject import Subject
@@ -11,23 +10,13 @@ from rx.subject.subject import Subject
 State = Any
 StateInput = Any
 
-StateView = Callable[[State], Any]
 StateTransition = Callable[[State, StateInput], State]
-StateEvent = Callable[[State, StateInput, Any], None]
 
 # %%
 
 
-def defaultView(state: State) -> Any:
-    return state
-
-
 def defaultTransition(state: State, state_input: StateInput = None) -> State:
     return None if state is None else state_input
-
-
-def defaultOnEvent(state: State, state_input: StateInput, fsm: Any):  # pylint: disable=unused-argument
-    pass
 
 
 FSM_START = object()
@@ -37,12 +26,10 @@ FSM_STOP = object()
 class StateMachine:
 
     def __init__(self, initial_state: State,
-                 view: StateView = defaultView,
                  transition: StateTransition = defaultTransition) -> None:
         self._init_state: State = initial_state
         self._state: State = initial_state
 
-        self.view: StateView = view
         self.transition: StateTransition = transition
 
         self._subject: Optional[Subject] = None
@@ -56,7 +43,7 @@ class StateMachine:
 
     @property
     def state(self):
-        return self.view(self._state) if self.active else None
+        return self._state
 
     @property
     def active(self):
