@@ -1,7 +1,7 @@
 
 # %%
 from typing import Any, Callable, Optional, TypedDict
-
+import datetime
 
 # %%
 
@@ -60,18 +60,6 @@ class StateMachine:
                 self._action(
                     {'event': 'ENTER', 'state': next_state, 'state_input': state_input})
 
-            try:
-                if callable(self.state.on_exit):
-                    self.state.on_exit(state_input)
-            except AttributeError:
-                pass
-
-            try:
-                if callable(next_state.on_enter):
-                    next_state.on_enter(state_input)
-            except AttributeError:
-                pass
-
             self._state = next_state
 
     def __repr__(self) -> str:
@@ -81,4 +69,18 @@ class StateMachine:
 # %%
 sm = StateMachine('a')  # %%
 
+
+LOG = []
+
+
+def makeLogger(log):
+
+    def logAction(event):
+        event.update({'time': datetime.datetime.now().strftime('%H:%M:%S')})
+        log.append(event)
+
+    return logAction
+
+
+sm.action = makeLogger(LOG)
 # %%
