@@ -3,14 +3,14 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))  # nopep8
 
-from game.lib import StateMachine, transitionFromMap, FsmTransitionMap, State, FsmInput, FsmEvent
+from game.lib import StateMachine, transitionFromMap, FsmTransitionMap, FsmEvent
 
 # %%
 TRANSITIONS: FsmTransitionMap = {
-    (State('bed'), FsmInput('wake')): State('home'),
-    (State('home'), FsmInput('sleep')): State('bed'),
-    (State('home'), FsmInput('commute')): State('work'),
-    (State('work'), FsmInput('commute')): State('home'),
+    ('bed', 'wake'): 'home',
+    ('home', 'sleep'): 'bed',
+    ('home', 'commute'): 'work',
+    ('work', 'commute'): 'home',
 }
 
 
@@ -20,7 +20,7 @@ def printEnter(event: FsmEvent):
             f"Received input {event['fsm_input']}.  New state is {event['state']}.")
 
 
-SM = StateMachine(State('bed'), transition=transitionFromMap(
+SM = StateMachine('bed', transition=transitionFromMap(
     TRANSITIONS), action=printEnter)
 
 # %%

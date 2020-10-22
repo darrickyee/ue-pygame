@@ -1,12 +1,12 @@
 
 # %%
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple, NewType, Literal, TypedDict
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 
 
 # %%
 
-State = NewType('State', object)
-FsmInput = NewType('FsmInput', object)
+State = Any
+FsmInput = Any
 FsmEvent = Dict[str, Any]
 
 
@@ -32,7 +32,7 @@ class InvalidTransitionError(FsmError, TypeError):
 
 
 def identityTransition(_: State, fsm_input: FsmInput = None) -> State:
-    return State(fsm_input)
+    return fsm_input
 
 
 def transitionFromMap(transition_map: FsmTransitionMap):
@@ -46,7 +46,7 @@ def transitionFromMap(transition_map: FsmTransitionMap):
 class StateMachine:
 
     def __init__(self, initial_state: State,
-                 transition: FsmTransition = identityTransition, action: Optional[FsmAction] = None) -> None:
+                 transition: FsmTransition = identityTransition, action: Optional[FsmAction] = None) -> None:  # pylint: disable=unsubscriptable-object
         self._state: State = initial_state
 
         self.set_transition(transition)
@@ -57,7 +57,7 @@ class StateMachine:
         return self._state
 
     @ property
-    def action(self) -> Optional[FsmAction]:
+    def action(self) -> Optional[FsmAction]:  # pylint: disable=unsubscriptable-object
         return self._action
 
     @ action.setter
@@ -94,14 +94,14 @@ class StateMachine:
 
     def _on_action(self, event_type, **kwargs):
         if self.action:
-            self.action({'event_type': event_type,
-                         'state': self.state, **kwargs})
+            self._action({'event_type': event_type,
+                          'state': self.state, **kwargs})
 
     def next(self, fsm_input=None):
 
         self._on_action('INPUT', fsm_input=fsm_input)
 
-        next_state = self.transition(self._state, fsm_input)
+        next_state = self._transition(self._state, fsm_input)
 
         if next_state != self.state:
             self._on_action('EXIT', fsm_input=fsm_input)
