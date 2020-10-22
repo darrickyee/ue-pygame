@@ -1,19 +1,18 @@
 # %%
-import typing as t
+from typing import Any
 from abc import abstractproperty
 from collections.abc import Hashable, Iterable, Mapping, MutableSequence, Sequence
 from functools import singledispatchmethod
-from typing import Dict
 
 
 class BaseView(Mapping):
 
     def __init__(self, graph):
         self._graph = graph
-        self._map: t.Dict[t.Any, t.Dict[t.Any, t.Any]] = graph._map
+        self._map: dict[Any, dict] = graph._map
 
     @abstractproperty
-    def _data(self) -> Dict:
+    def _data(self) -> dict:
         return dict()
 
     @abstractproperty
@@ -83,8 +82,8 @@ class NodeView(BaseView):
 class Graph:
 
     def __init__(self, *, nodes=None, edges=None):
-        self._map: t.Dict[t.Any, t.Dict[t.Any, t.Any]] = {}
-        self._nodedata: t.Dict[t.Any, t.Any] = {}
+        self._map: dict[Any, dict[Any, Any]] = {}
+        self._nodedata: dict[Any, Any] = {}
 
         if nodes:
             self.add_nodes(nodes)
