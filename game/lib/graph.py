@@ -1,11 +1,11 @@
 # %%
 from typing import Any
-from abc import abstractproperty
+from abc import ABC, abstractproperty
 from collections.abc import Hashable, Iterable, Mapping, MutableSequence, Sequence
 from functools import singledispatchmethod
 
 
-class BaseView(Mapping):
+class BaseView(Mapping, ABC):
 
     def __init__(self, graph):
         self._graph = graph
