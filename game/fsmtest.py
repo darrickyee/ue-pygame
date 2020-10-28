@@ -1,5 +1,5 @@
 # %%
-from game.lib import StateMachine, transitionFromMap, FsmTransitionMap, FsmEvent
+from game.lib.fsm import StateMachine, transitionFromMap, changeListener, stateListener, FsmTransitionMap, FsmEvent
 
 # %%
 TMAP1: FsmTransitionMap = {
@@ -24,6 +24,9 @@ def printEnter(event: FsmEvent):
 
 
 SM = StateMachine('solid', transition=transitionFromMap(
-    TMAP2), action=printEnter)
+    TMAP2))
+
+# %%
+
 
 # %%
