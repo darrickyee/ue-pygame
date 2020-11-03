@@ -110,7 +110,8 @@ def evaluate(data: Any, predicate: Mapping) -> bool:
 
 
 def combine(*predicates: Mapping[str, Any],
-            op: Literal['and', 'or', 'not'] = 'and',
+            op: Literal['and', 'or',  # pylint: disable=unsubscriptable-object
+                        'not'] = 'and',
             path: str = '') -> dict[str, Any]:
     """Combines multiple predicates into a single second-order predicate with
     operator `op` and path `path`.
@@ -140,3 +141,7 @@ def combine(*predicates: Mapping[str, Any],
 
 def bind_data(data: Any):
     return partial(evaluate, data)
+
+
+def evaluator(predicate: Mapping):
+    return partial(evaluate, predicate=predicate)

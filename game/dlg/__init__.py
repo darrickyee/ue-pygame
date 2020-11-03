@@ -1,6 +1,7 @@
 from pathlib import Path
 from ..db import loadDB
-from .nodes import DlgBranch, DlgEnd, DlgGroup, DlgText, DlgNode
+from .dialogue import Dialogue
+from .nodes import DlgBranch, DlgEnd, DlgGroup, DlgNode, DlgText
 
 
 def loadDlgTables(filepath='dlg.db'):

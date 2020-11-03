@@ -1,5 +1,5 @@
 # %%
-from game.lib.fsm import StateMachine, transitionFromMap, changeListener, stateListener, FsmTransitionMap, FsmEvent
+from game.core.fsm import StateMachine, transitionFromMap, changeListener, stateListener, FsmTransitionMap, FsmEvent
 
 # %%
 TMAP1: FsmTransitionMap = {
