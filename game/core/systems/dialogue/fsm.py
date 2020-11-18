@@ -1,7 +1,6 @@
-from game.lib.fsm.observable import to_observable
-from typing import Any, Callable, Union
+from typing import Any
 import rx.operators as ops
-from ..lib import Graph, StateMachine, evaluate, on_change, ispredicate
+from ....lib import Graph, StateMachine, evaluate, on_change, ispredicate, to_observable
 from .nodes import DlgBranch, DlgEnd, DlgGroup, DlgNode, DlgText
 
 

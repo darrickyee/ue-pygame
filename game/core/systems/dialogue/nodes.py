@@ -1,9 +1,9 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List
 
 
 class DlgNode:
 
-    def __init__(self, condition: dict[str, Any] = None, on_enter: List[dict[str, Any]] = None) -> None:
+    def __init__(self, condition: Dict[str, Any] = None, on_enter: List[Dict[str, Any]] = None) -> None:
         self.condition = condition  # pylint: disable=unsubscriptable-object
         self.on_enter = on_enter
 
@@ -13,7 +13,7 @@ class DlgNode:
 
 class DlgText(DlgNode):
 
-    def __init__(self, text: str = '', speaker: str = '', condition: dict[str, Any] = None):
+    def __init__(self, text: str = '', speaker: str = '', condition: Dict[str, Any] = None):
         super().__init__(condition)
         self.text = text
         self.speaker = speaker
@@ -32,5 +32,5 @@ class DlgBranch(DlgNode):
 
 class DlgGroup(DlgNode):
 
-    def __init__(self, condition: dict = None) -> None:
+    def __init__(self, condition: Dict = None) -> None:
         super().__init__(condition=condition, on_enter=None)

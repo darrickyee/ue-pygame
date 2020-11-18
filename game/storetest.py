@@ -9,7 +9,7 @@ st = Store({'world': {'day': 1, 'location': 'Home'},
             'player': {'name': 'Bob', 'memories': ['ok', 'not ok']}})
 
 # %%
-st.dispatch({'action_type': 'set_value', 'path': '/world/day', 'value': 34})
+st.update({'action_type': 'set_value', 'path': '/world/day', 'value': 34})
 
 # %%
 sub = Subject()

@@ -1,6 +1,6 @@
 # %%
 
-from game.core import Graph
+from game.lib import Graph
 from game.dlg import Dialogue, DlgText, DlgGroup, DlgBranch
 
 # %%
@@ -32,7 +32,7 @@ GAMESTATE = {
         'stat1': 5
     },
     'world': {
-        'day': 'Monday'
+        'day': 'Tuesday'
     }
 }
 
@@ -58,7 +58,7 @@ G = Graph(edges=[
     (LNS[7], GRP1),
 ])
 # %%
-dlg = Dialogue(G, GAMESTATE)
-dlg.subscribe(dlg.viewListener(print))
+# dlg = Dialogue(G, GAMESTATE)
+# dlg.views.subscribe(print)
 
 # %%

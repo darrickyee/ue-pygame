@@ -1,5 +1,7 @@
 # %%
-from game.core.fsm import StateMachine, transitionFromMap, changeListener, stateListener, FsmTransitionMap, FsmEvent
+import rx.operators as ops
+from game.lib import StateMachine, FsmTransitionMap, to_observable
+from game.lib.fsm import from_map
 
 # %%
 TMAP1: FsmTransitionMap = {
@@ -17,16 +19,13 @@ TMAP2: FsmTransitionMap = {
 }
 
 
-def printEnter(event: FsmEvent):
+def printEnter(event: dict):
     if event['event_type'] == 'ENTER':
         print(
             f"Received input {event['fsm_input']}.  New state is {event['state']}.")
 
 
-SM = StateMachine('solid', transition=transitionFromMap(
-    TMAP2))
+SM = StateMachine('solid', transition=from_map(TMAP2))
 
-# %%
-
-
+EVENTS = to_observable(SM).pipe(ops.distinct_until_changed())
 # %%

@@ -1,21 +1,25 @@
-
+# %%
 import json
-from json.decoder import JSONDecodeError
-import jsonpointer as jptr
-import rx.operators as ops
+from game import GAME
 import ue_pylink as ue
-from game import EVENT_STREAM, GAMESTATE
 
 
-EVENT_STREAM.pipe(ops.filter(lambda value: value.get(
-    'event_type', None) == 'STATE_CHANGED'),
-    ops.map(lambda value: value['data'])).subscribe(lambda state: ue.dispatch('STATE_CHANGED', state))
+def DispatchUE(event: dict):
+    ue.log(f'Event: {event}')
+    ue.dispatch('STATE_UPDATED',
+                json.dumps(event))
+
+
+GAME.events.subscribe(DispatchUE)
+GAME.log = lambda a: ue.log(f'Received action: {a}')
 
 
 def GetState(_: None):
-    return json.dumps(GAMESTATE.state)
+    return json.dumps(GAME.state)
 
 
-def SetState(newstate: str):
-    EVENT_STREAM.on_next({'event_type': 'ACTION', 'data': {
-                         'action_type': 'APPLY_SNAPSHOT', 'snapshot': json.loads(newstate)}})
+def OnAction(action: str):
+    try:
+        GAME.dispatch(json.loads(action))
+    except json.decoder.JSONDecodeError:
+        ue.log(f"Warning: Action '{action}' could not be processed.")

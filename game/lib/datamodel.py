@@ -5,6 +5,38 @@ from typing import Any, Union
 
 TYPES_SIMPLE = (bool, float, int, str)
 TYPES_COMPLEX = (list, dict)
+# %%
+
+
+class ListModel(list):
+
+    _types = (int, bool)
+
+    def __add__(self, value):
+        if all(isinstance(x, self._types) for x in value):
+            return super().__add__(value)
+
+        raise TypeError('Wrong type')
+
+
+class MapModel(dict):
+
+    _types = (str, float)
+
+    def __init__(self, *args, **kwargs) -> None:
+        d = dict(*args, **kwargs)
+        if all(isinstance(k, str) for k in d) and all(isinstance(v, self._types) for v in d.values()):
+            super().__init__(*args, **kwargs)
+        else:
+            raise TypeError(
+                f"{self.__class__.__name__} type must take values of type {self._types}.")
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        if isinstance(key, str) and isinstance(value, self._types):
+            return super().__setitem__(key, value)
+
+        raise TypeError(f'Cannot assign')
+# %%
 
 
 @singledispatch
@@ -99,6 +131,5 @@ class ModelType(dict):
 
     def __setitem__(self, k, v) -> None:
         if k in self.__annotations__:
-            
 
             # %%

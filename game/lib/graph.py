@@ -1,4 +1,3 @@
-# %%
 from typing import Any
 from abc import ABC, abstractproperty
 from collections.abc import Hashable, Iterable, Mapping, MutableSequence, Sequence
@@ -241,5 +240,3 @@ class Graph:
 
     def to_json(self):
         return {'nodes': dict(self.nodes), 'edges': dict(self.edges)}
-
-# %%

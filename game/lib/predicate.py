@@ -29,6 +29,7 @@ OPS2 = {
     'not': lambda x: not any(x)
 }
 
+OPERATORS = tuple({**OPS1, **OPS2})
 
 # %%
 

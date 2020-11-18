@@ -1,5 +1,5 @@
 # %%
-from game.core.predicate import evaluator
+from game.lib.predicate import evaluator
 
 DATA = {
     'world': {'day': 30}
