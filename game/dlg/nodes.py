@@ -1,11 +1,11 @@
-from typing import Any, List, Optional
+from typing import Any, List
 
 
 class DlgNode:
 
     def __init__(self, condition: dict[str, Any] = None, on_enter: List[dict[str, Any]] = None) -> None:
-        self.condition = condition  # pylint: disable=unsubscriptable-object
-        self.on_enter = on_enter
+        self.condition: dict[str, Any] = condition or {}
+        self.on_enter: List[dict[str, Any]] = on_enter or []
 
     def __repr__(self):
         return f"{type(self).__name__}()"
@@ -13,8 +13,11 @@ class DlgNode:
 
 class DlgText(DlgNode):
 
-    def __init__(self, text: str = '', speaker: str = '', condition: dict[str, Any] = None):
-        super().__init__(condition)
+    def __init__(self, condition: dict[str, Any] = None,
+                 on_enter: List[dict[str, Any]] = None,
+                 text: str = '',
+                 speaker: str = '', ):
+        super().__init__(condition, on_enter)
         self.text = text
         self.speaker = speaker
 
