@@ -1,13 +1,10 @@
-# %%
 import json
-from abc import ABC, abstractproperty, abstractmethod
+from abc import ABC, abstractproperty
 from functools import wraps
-from typing import Any, Mapping
+from typing import Any
 import rx.operators as ops
 from rx.subject.subject import Subject
 from rx.disposable.disposable import Disposable
-
-# %%
 
 
 def notifier(fn):
@@ -31,15 +28,23 @@ def copier(fn):
 
 class ObsBase(ABC):
 
+    _classmap = {}
+    _classself = object
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._subject = Subject()
         self.subscribe = self._subject.pipe(
-            ops.distinct_until_changed(json.dumps)).subscribe
+            ops.distinct_until_changed(json.dumps)).subscribe  # type: ignore
         self._observables: dict[Disposable, Any] = {}
+        self._update_observables()
 
     @ abstractproperty
     def _values(self) -> tuple[Any, ...]:
+        raise NotImplementedError
+
+    @abstractproperty
+    def _items(self) -> tuple[tuple[str, Any], ...]:
         raise NotImplementedError
 
     def _notifier(self, fn):
@@ -56,6 +61,12 @@ class ObsBase(ABC):
         self._subject.on_next(self)
 
     def _update_observables(self):
+        for k, value in self._items:
+            if isinstance(value, tuple(self._classmap)) and not isinstance(value, self._classself):
+                obscls = [obstype for c, obstype in self._classmap.items()
+                          if isinstance(value, c)][0]
+                self[k] = obscls(value)  # type: ignore
+
         to_dispose = tuple(disposer
                            for disposer, value in self._observables.items()
                            if value not in self._values)
@@ -68,7 +79,7 @@ class ObsBase(ABC):
                         if value not in self._observables.values() and isinstance(value, ObsBase))
         for new_value in to_subscribe:
             disposer = new_value.subscribe(lambda _: self._notify())
-            self._observables[disposer] = new_value
+            self._observables[disposer] = new_value  # type: ignore
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({super().__repr__()})'
@@ -80,6 +91,10 @@ class ObsList(ObsBase, list):
     def _values(self):
         return tuple(self)
 
+    @property
+    def _items(self):
+        return tuple(enumerate(self))
+
 
 class ObsDict(ObsBase, dict):
 
@@ -87,7 +102,9 @@ class ObsDict(ObsBase, dict):
     def _values(self) -> tuple[Any, ...]:
         return tuple(self.values())
 
-# %%
+    @property
+    def _items(self):
+        return tuple(self.items())
 
 
 MUTATORS = {
@@ -101,18 +118,12 @@ COPIERS = {
     ObsDict: ['__or__', '__ror__']
 }
 
+ObsBase._classmap = {list: ObsList, dict: ObsDict}
+ObsBase._classself = ObsBase
+
 for cls in ObsList, ObsDict:
     for name in ['__delitem__', '__setitem__', 'clear', 'pop'] + MUTATORS[cls]:
         setattr(cls, name, notifier(getattr(cls, name)))
 
     for name in ['copy'] + COPIERS[cls]:
         setattr(cls, name, copier(getattr(cls, name)))
-
-# %%
-cmp1 = ObsDict(a=32, b='abc')
-cmp1.subscribe(lambda d: print(f'Changed: {d}'))
-cmp2 = ObsDict(d='hello')
-cmp1['c2'] = cmp2
-lst1 = ObsList()
-cmp1['l1'] = lst1
-# %%

@@ -1,6 +1,5 @@
 # %%
 import json
-from game import GAME
 import ue_pylink as ue
 
 
@@ -10,16 +9,9 @@ def DispatchUE(event: dict):
                 json.dumps(event))
 
 
-GAME.events.subscribe(DispatchUE)
-GAME.log = lambda a: ue.log(f'Received action: {a}')
-
-
 def GetState(_: None):
-    return json.dumps(GAME.state)
+    return json.dumps({})
 
 
 def OnAction(action: str):
-    try:
-        GAME.dispatch(json.loads(action))
-    except json.decoder.JSONDecodeError:
-        ue.log(f"Warning: Action '{action}' could not be processed.")
+    ue.log(f'Action received: {action}')
